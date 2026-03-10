@@ -1,44 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>5 in a Row</title>
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
 body{
-    font-family: Arial;
+    font-family:Arial;
     text-align:center;
-    background:#f4f4f4;
+    background:#0f172a;
+    color:white;
+}
+
+h1{
+    margin-top:10px;
 }
 
 #board{
     display:grid;
-    grid-template-columns:repeat(15,35px);
-    grid-template-rows:repeat(15,35px);
+    grid-template-columns:repeat(15,24px);
+    grid-template-rows:repeat(15,24px);
     gap:2px;
     justify-content:center;
     margin:20px auto;
 }
 
 .cell{
-    width:35px;
-    height:35px;
-    background:white;
-    border:1px solid #ccc;
+    width:24px;
+    height:24px;
+    background:#1e293b;
+    border-radius:4px;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:20px;
+    font-size:14px;
     cursor:pointer;
 }
 
 .cell:hover{
-    background:#eee;
+    background:#334155;
 }
 
 button{
-    padding:10px 20px;
-    font-size:16px;
+    padding:8px 16px;
+    border:none;
+    border-radius:6px;
+    background:#22c55e;
+    color:white;
+    font-size:14px;
 }
 </style>
 </head>
@@ -54,38 +65,44 @@ button{
 
 <script>
 
-const boardSize = 15
+const tg = window.Telegram.WebApp
+tg.expand()
+
+const size = 15
 let board = []
-let currentPlayer = "X"
+let player = "X"
 let gameOver = false
 
 const boardDiv = document.getElementById("board")
 const statusText = document.getElementById("status")
 
 function createBoard(){
+
     boardDiv.innerHTML = ""
     board = []
 
-    for(let y=0;y<boardSize;y++){
+    for(let y=0;y<size;y++){
+
         board[y] = []
 
-        for(let x=0;x<boardSize;x++){
+        for(let x=0;x<size;x++){
+
             board[y][x] = ""
 
             const cell = document.createElement("div")
-            cell.classList.add("cell")
+            cell.className = "cell"
 
             cell.dataset.x = x
             cell.dataset.y = y
 
-            cell.onclick = cellClick
+            cell.onclick = clickCell
 
             boardDiv.appendChild(cell)
         }
     }
 }
 
-function cellClick(){
+function clickCell(){
 
     if(gameOver) return
 
@@ -94,17 +111,18 @@ function cellClick(){
 
     if(board[y][x] !== "") return
 
-    board[y][x] = currentPlayer
-    this.textContent = currentPlayer
+    board[y][x] = player
+    this.innerText = player
 
     if(checkWin(x,y)){
-        statusText.textContent = "Player " + currentPlayer + " wins!"
+        statusText.innerText = "Player " + player + " wins!"
+        tg.HapticFeedback.notificationOccurred("success")
         gameOver = true
         return
     }
 
-    currentPlayer = currentPlayer === "X" ? "O" : "X"
-    statusText.textContent = "Player " + currentPlayer + " turn"
+    player = player === "X" ? "O" : "X"
+    statusText.innerText = "Player " + player + " turn"
 }
 
 function checkDirection(x,y,dx,dy){
@@ -112,24 +130,24 @@ function checkDirection(x,y,dx,dy){
     let count = 1
 
     for(let i=1;i<5;i++){
-        let nx = Number(x) + dx*i
-        let ny = Number(y) + dy*i
-        if(board[ny]?.[nx] === currentPlayer) count++
+        let nx = Number(x)+dx*i
+        let ny = Number(y)+dy*i
+        if(board[ny]?.[nx]===player) count++
         else break
     }
 
     for(let i=1;i<5;i++){
-        let nx = Number(x) - dx*i
-        let ny = Number(y) - dy*i
-        if(board[ny]?.[nx] === currentPlayer) count++
+        let nx = Number(x)-dx*i
+        let ny = Number(y)-dy*i
+        if(board[ny]?.[nx]===player) count++
         else break
     }
 
-    return count >= 5
+    return count>=5
 }
 
 function checkWin(x,y){
-    return (
+    return(
         checkDirection(x,y,1,0) ||
         checkDirection(x,y,0,1) ||
         checkDirection(x,y,1,1) ||
@@ -138,9 +156,9 @@ function checkWin(x,y){
 }
 
 function restartGame(){
-    currentPlayer = "X"
-    gameOver = false
-    statusText.textContent = "Player X turn"
+    player="X"
+    gameOver=false
+    statusText.innerText="Player X turn"
     createBoard()
 }
 
